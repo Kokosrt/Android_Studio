@@ -12,6 +12,7 @@ class CalculatorActivity : AppCompatActivity() {
     private lateinit var textView: TextView
     private lateinit var editText: EditText
 
+
     private var operand1: Int = 0
     private var operator: String? = null
 

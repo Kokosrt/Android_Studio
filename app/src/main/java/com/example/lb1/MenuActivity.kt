@@ -8,12 +8,12 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
-class SecondActivity : AppCompatActivity() {
+class MenuActivity : AppCompatActivity() {
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_second)
+        setContentView(R.layout.activity_second_menu)
 
         val button: Button = findViewById(R.id.btN)
         val editText: EditText = findViewById(R.id.editText)
