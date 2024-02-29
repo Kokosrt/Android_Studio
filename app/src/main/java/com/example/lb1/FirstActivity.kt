@@ -8,7 +8,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 
-class MainActivity : AppCompatActivity() {
+class FirstActivity : AppCompatActivity() {
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,10 +28,10 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, SecondActivity::class.java)
             startActivity(intent)
         }
-        button.setOnClickListener {
+/*        button.setOnClickListener {
             val intent = Intent(this, PhotoAddActivity::class.java)
             startActivity(intent)
-        }
+        }*/
 
     }
 }

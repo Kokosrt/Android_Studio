@@ -12,7 +12,7 @@ class CalculatorActivity : AppCompatActivity() {
     private lateinit var textView: TextView
     private lateinit var editText: EditText
 
-    private var operand1: Int = 0
+    private var operand1: Double = 0.0
     private var operator: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,7 +22,7 @@ class CalculatorActivity : AppCompatActivity() {
         editText = findViewById(R.id.editText)
         textView = findViewById(R.id.textViewSecond)
 
-        editText.filters = arrayOf<InputFilter>(InputFilter.LengthFilter(10))
+        editText.filters = arrayOf<InputFilter>(InputFilter.LengthFilter(6))
 
         val numberButtons = listOf<Button>(
             findViewById(R.id.bt1),
@@ -63,21 +63,30 @@ class CalculatorActivity : AppCompatActivity() {
 
     private fun performOperation(newOperator: String) {
         val inputString = editText.text.toString()
+
         if (inputString.isNotEmpty()) {
-            val input = inputString.toInt()
+            val input = inputString.toDouble()
             when (operator) {
                 null,
                 "=" -> operand1 = input
                 "+" -> operand1 += input
                 "-" -> operand1 -= input
                 "*" -> operand1 *= input
-                "/" -> operand1 /= input
+                "/" -> {
+                    if (input != 0.0) {
+                        operand1 /= input
+                    } else {
+                        // Обробка ділення на нуль
+                        textView.text = "Error: Division by zero"
+                        return
+                    }
+                  }
+                }
+                operator = newOperator
+                textView.text = operand1.toString()
+                editText.text.clear()
+            } else {
+                textView.text = "Error: No input"
             }
-            operator = newOperator
-            textView.text = operand1.toString()
-            editText.text.clear()
-        } else {
-            textView.text = "Error: No input"
-        }
     }
 }
