@@ -1,101 +1,136 @@
 package com.example.lb1
 
+
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.net.Uri
+import android.content.Context
+import android.content.SharedPreferences
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.content.Intent
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
-import android.widget.TextView
+import android.content.Intent
+import android.os.Parcel
+import android.os.Parcelable
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import com.example.lb1.R
-import java.io.File
-import java.io.FileOutputStream
-import kotlin.math.ceil
-import kotlin.math.max
 
-@Suppress("DEPRECATION")
-class RegistrationActivity : AppCompatActivity() {
+
+class RegistrationActivity() : AppCompatActivity(), Parcelable {
+
     private val PICK_IMAGE_REQUEST = 1
-    private lateinit var imageView: ImageView
-    private var selectedImageUri: Uri? = null
+    private lateinit var name: EditText
+    private lateinit var phone: EditText
+    private lateinit var dateOfBirth: EditText
+    private lateinit var login: EditText
+    private lateinit var password: EditText
+    private lateinit var confirmPassword: EditText
+    private lateinit var reg: Button
 
+    constructor(parcel: Parcel) : this() {
 
-    @SuppressLint("CutPasteId", "MissingInflatedId")
+    }
+
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
+        val preference: SharedPreferences = this.getSharedPreferences("user", Context.MODE_PRIVATE)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_registration)
 
-        val editTextName = findViewById<EditText>(R.id.inName)
-        val editTextPhone = findViewById<EditText>(R.id.inPhone)
-        val editTextDoB = findViewById<EditText>(R.id.inDateOfBirth)
-        val editTextLogin = findViewById<EditText>(R.id.inLogin)
-        val editTextPassword = findViewById<EditText>(R.id.inPassword)
-        val editTextConfirmPassword = findViewById<EditText>(R.id.inConfirmPassword)
+        name = findViewById(R.id.inName)
+        phone = findViewById(R.id.inPhone)
+        dateOfBirth = findViewById(R.id.inDateOfBirth)
+        login = findViewById(R.id.inLogin)
+        password = findViewById(R.id.inPassword)
+        confirmPassword = findViewById(R.id.inConfirmPassword)
+        reg = findViewById(R.id.cReg)
 
-        imageView = findViewById(R.id.avatar)
+        reg.setOnClickListener {
+            // Отримання даних з полів вводу
+            val nameValue = name.text.toString().trim()
+            val phoneValue = phone.text.toString().trim()
+            val dateOfBirthValue = dateOfBirth.text.toString().trim()
+            val loginValue = login.text.toString().trim()
+            val passwordValue = password.text.toString().trim()
+            val confirmPasswordValue = confirmPassword.text.toString().trim()
 
-        imageView.setOnClickListener {
-            val intent = Intent()
-            intent.type = "image/*"
-            intent.action = Intent.ACTION_GET_CONTENT
-            startActivityForResult(Intent.createChooser(intent, "Виберіть фото"), PICK_IMAGE_REQUEST)
+            // Перевірка порожності полів
+            if (nameValue.isNotEmpty() && phoneValue.isNotEmpty() &&
+                dateOfBirthValue.isNotEmpty() && loginValue.isNotEmpty() &&
+                passwordValue.isNotEmpty() && confirmPasswordValue.isNotEmpty()
+            ) {
+                // Перевірка співпадіння паролів
+                if (passwordValue == confirmPasswordValue) {
+                    // Збереження даних у SharedPreferences
+                    val sharedPreferences: SharedPreferences =
+                        getSharedPreferences("user_data", MODE_PRIVATE)
+                    val editor: SharedPreferences.Editor = sharedPreferences.edit()
+                    editor.putString("name", nameValue)
+                    editor.putString("phone", phoneValue)
+                    editor.putString("date_of_birth", dateOfBirthValue)
+                    editor.putString("login", loginValue)
+                    editor.putString("password", passwordValue)
+                    editor.apply()
+
+                    showToast("Реєстрація успішна!")
+
+                    // Перехід на новий активіті
+                    val intent = Intent(this, AuthActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                } else {
+                    Toast.makeText(
+                        this,
+                        "Паролі не співпадають. Перевірте правильність введених даних.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            } else {
+                Toast.makeText(
+                    this,
+                    "Будь ласка, заповніть всі поля перед реєстрацією.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
-    }
 
-    @Deprecated("Deprecated in Java")
+        val imageView: ImageView = findViewById(R.id.avatar)
+        // Викликаємо інтент для вибору фото з галереї при кліку на ImageView
+        imageView.setOnClickListener {
+            val intent = Intent(Intent.ACTION_PICK)
+            intent.type = "image/*"
+            startActivityForResult(intent, PICK_IMAGE_REQUEST)
+        }
+
+
+    }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == AppCompatActivity.RESULT_OK && data != null && data.data != null) {
-            selectedImageUri = data.data
-            val scaledBitmap = scaleBitmap(selectedImageUri)
-            if (scaledBitmap != null) {
-                imageView.setImageBitmap(scaledBitmap)
-            } else {
-                // Обробка ситуації, коли scaledBitmap має значення null
-            }
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null) {
+            val selectedImageUri = data.data
+            // Отримуємо обране фото і встановлюємо його в ImageView
+            findViewById<ImageView>(R.id.avatar).setImageURI(selectedImageUri)
         }
     }
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
 
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
 
-    private fun scaleBitmap(selectedImageUri: Uri?): Bitmap? {
-        selectedImageUri?.let {
-            val inputStream = contentResolver.openInputStream(it)
-            val options = BitmapFactory.Options()
-            options.inJustDecodeBounds = true
-            BitmapFactory.decodeStream(inputStream, null, options)
-            inputStream?.close()
-            val scaleFactor = calculateScaleFactor(options.outWidth, options.outHeight)
-            options.inJustDecodeBounds = false
-            options.inSampleSize = scaleFactor
-            val scaledBitmap = BitmapFactory.decodeStream(contentResolver.openInputStream(it), null, options)
-            return scaledBitmap
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<RegistrationActivity> {
+        override fun createFromParcel(parcel: Parcel): RegistrationActivity {
+            return RegistrationActivity(parcel)
         }
-        return null
-    }
 
-
-    private fun calculateScaleFactor(imageWidth: Int, imageHeight: Int): Int {
-        var scaleFactor = 1
-        if (imageWidth > MAX_IMAGE_WIDTH || imageHeight > MAX_IMAGE_HEIGHT) {
-            val widthScale = imageWidth.toFloat() / MAX_IMAGE_WIDTH.toFloat()
-            val heightScale = imageHeight.toFloat() / MAX_IMAGE_HEIGHT.toFloat()
-            scaleFactor = ceil(max(widthScale, heightScale).toDouble()).toInt()
+        override fun newArray(size: Int): Array<RegistrationActivity?> {
+            return arrayOfNulls(size)
         }
-        return scaleFactor
     }
-
-    companion object {
-        private const val MAX_IMAGE_WIDTH = 500
-        private const val MAX_IMAGE_HEIGHT = 300
-    }
-
 }
-
-
-
